@@ -1,0 +1,253 @@
+* {
+  margin: 0;
+  box-sizing: border-box;
+  padding: 0;
+}
+body,
+html {
+  font-family: "Roboto", sans-serif;
+  background: white;
+}
+
+header {
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  /* display: flex;
+  align-items: center;
+  justify-content: space-between; */
+}
+.container {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  padding: 1.5em;
+  max-width: 1200px;
+}
+nav {
+  width: 100%;
+
+  align-items: center;
+  padding: 20px;
+  background: white;
+  margin: 0 auto;
+}
+ul {
+  list-style-type: none;
+}
+ul {
+  display: flex;
+}
+
+ul li {
+  margin: 0.1em;
+}
+.login {
+  padding: 0.5em 1em;
+  border: none;
+  font-size: 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* maincontainer */
+
+.main {
+  text-align: center;
+  margin-top: 1.5em;
+  margin: 0 auto;
+  padding: 1.25em;
+}
+.main-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  grid-template-rows: repeat(auto-fill, minmax(300px, 1fr));
+  margin-top: 1.5em;
+}
+
+.btn {
+  font-family: "Roboto", sans-serif;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.5em 0.9em;
+  font-size: 2rem;
+}
+
+.add-btn {
+  border: none;
+  grid-column: 2;
+  background: none;
+  font-weight: 600;
+}
+.add-btn:hover {
+  background: #f0eef1;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.active-overlay {
+  display: block;
+}
+.modal {
+  position: fixed;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  padding: 15px;
+  border-radius: 5px;
+  background-color: #f0eef1;
+  text-align: center;
+  transform: translate(-50%, -50%) scale(0);
+  transition: 0.2s ease-in-out;
+}
+
+.user-modal {
+  position: fixed;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  padding: 35px;
+  border-radius: 5px;
+  background-color: #f0eef1;
+  text-align: center;
+  transform: translate(-50%, -50%) scale(0);
+  transition: 0.2s ease-in-out;
+  font-size: 1.3rem;
+}
+#userEmail {
+  margin-top: 0.5em;
+  font-weight: bold;
+}
+
+.modal-active {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.modal h3 {
+  font-size: 1.4rem;
+}
+.active {
+  display: block;
+  transform: translate(-50%, -50%);
+  background-color: #f0eef1;
+  animation: bounce-in 2s ease-in;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+form input {
+  width: 100%;
+  margin: 0.2em 0;
+  border-radius: 5px;
+  background: white;
+  color: rgb(0, 0, 0);
+  padding: 0.8em 0;
+  border: 1px solid rgb(58, 54, 54);
+  text-indent: 10px;
+  font-size: 1.1rem;
+}
+
+.submit {
+  font-size: 1rem;
+  background: #9fff9c;
+  margin-top: 0.5em;
+  border: none;
+  width: 100%;
+  padding: 0.7em 1.5em;
+}
+
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.35rem;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  gap: 10px;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 0.5em;
+}
+
+.github-image {
+  width: 25px;
+}
+.books-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 40px;
+
+  /* padding: 2.5em; */
+}
+.book-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 5px;
+  font-size: 1.3rem;
+  padding: 1.9rem;
+  background: white;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  line-height: 1.2;
+}
+.book-item p {
+  margin: 0.3em 0;
+}
+.btn-container {
+  width: 100%;
+}
+
+.remove {
+  margin-top: 0.9em;
+  font-size: 1rem;
+  background: #f0eef1;
+  border: none;
+  width: 100%;
+  padding: 0.7em 1.5em;
+}
+
+.no-books {
+  display: none;
+}
+
+.not-read {
+  background-color: red;
+}
+
+.read-div {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  /* align-items: center; */
+}
+.read-div input {
+  width: 20px;
+  height: 20px;
+  /* font-size: 40px; */
+}
+.read-div label {
+  font-size: 1.3rem;
+  margin-right: 1em;
+}
+
+#duplicate-found {
+  color: red;
+  display: none;
+  font-size: 1.2rem;
+}

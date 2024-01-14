@@ -22,28 +22,28 @@ const provider = new GoogleAuthProvider();
 // //used to fetch from firebase
 const db = getFirestore();
 const colRef = collection(db, "books");
-let myLibrary = [];
+// let myLibrary = [];
 
-function getUsersBooks() {
-  "getting users books called", signedInUser;
-  if (signedInUser) {
-    getDocs(colRef)
-      .then(snapshot => {
-        let books = [];
-        snapshot.docs.forEach(doc => {
-          if (doc.data().userId === signedInUser.uid) {
-            books.push({ ...doc.data(), id: doc.id });
-          }
-        });
+// function getUsersBooks() {
+//   "getting users books called", signedInUser;
+//   if (signedInUser) {
+//     getDocs(colRef)
+//       .then(snapshot => {
+//         let books = [];
+//         snapshot.docs.forEach(doc => {
+//           if (doc.data().userId === signedInUser.uid) {
+//             books.push({ ...doc.data(), id: doc.id });
+//           }
+//         });
 
-        myLibrary.push(...books);
-        displayBooks();
-      })
-      .catch(err => ("Error when fetching", err));
-  } else {
-    getBooksFromLocal();
-  }
-}
+//         myLibrary.push(...books);
+//         displayBooks();
+//       })
+//       .catch(err => ("Error when fetching", err));
+//   } else {
+//     getBooksFromLocal();
+//   }
+// }
 
 //connect js and html
 const signBtn = document.getElementById("sign-btn");
@@ -69,6 +69,8 @@ const noBooks = document.getElementById("no-books");
 const todaysYear = document.getElementById("year");
 const duplicateFound = document.getElementById("duplicate-found");
 
+overlay.addEventListener("click", toggleModal);
+
 //auth
 const userSignIn = async () => {
   signInWithPopup(auth, provider)
@@ -91,8 +93,6 @@ const userSignOut = async () => {
 
 //checks if the user has signed in or signed out
 onAuthStateChanged(auth, user => {
-  clearDom();
-
   signedInUser = user;
   if (user) {
     getUsersBooks();
@@ -104,206 +104,284 @@ onAuthStateChanged(auth, user => {
     userEmail.innerHTML = str[0];
     accountBtn.style.display = "block";
   } else {
-    getBooksFromLocal();
-    displayBooks();
+    // getBooksFromLocal();
+    // displayBooks();
     signBtn.style.display = "block";
     signOutBtn.style.display = "none";
     accountBtn.style.display = "none";
   }
 });
 
-const showUserModal = () => {
-  overlay.classList.add("active-overlay");
-  userModal.classList.add("modal-active");
-};
+// const showUserModal = () => {
+//   overlay.classList.add("active-overlay");
+//   userModal.classList.add("modal-active");
+// };
 
 signOutBtn.style.display = "none";
 signBtn.addEventListener("click", userSignIn);
 signOutBtn.addEventListener("click", userSignOut);
-accountBtn.addEventListener("click", showUserModal);
-accountBtn.addEventListener("click", showUserModal);
+// accountBtn.addEventListener("click", showUserModal);
+// accountBtn.addEventListener("click", showUserModal);
 
-addBtn.addEventListener("click", ShowModal);
-overlay.addEventListener("click", toggleModal);
+// addBtn.addEventListener("click", ShowModal);
+// overlay.addEventListener("click", toggleModal);
 
-bookSubmission.addEventListener("submit", handleSubmit);
+// bookSubmission.addEventListener("submit", handleSubmit);
 function toggleModal() {
-  overlay.classList.remove("active-overlay");
-  modal.classList.remove("modal-active");
-  userModal.classList.remove("modal-active");
-}
-function ShowModal() {
-  overlay.classList.add("active-overlay");
-  modal.classList.add("modal-active");
-}
-
-function getBooksFromLocal() {
-  if (localStorage.getItem("books")) {
-    const localBooks = JSON.parse(localStorage.getItem("books"));
-    myLibrary.push(...localBooks);
+  console.log("toggle modal clicked");
+  if (modal.classList.contains("modal-active")) {
+    overlay.classList.remove("active-overlay");
+    modal.classList.remove("modal-active");
+    return;
   } else {
-    myLibrary = [];
-    setBooksToLocal();
+    overlay.classList.add("active-overlay");
+    modal.classList.add("modal-active");
   }
-}
 
-function setBooksToLocal() {
-  localStorage.setItem("books", JSON.stringify(myLibrary));
+  // overlay.classList.remove("active-overlay");
+  // modal.classList.remove("modal-active");
+  // userModal.classList.remove("modal-active");
 }
+// function ShowModal() {
+//   overlay.classList.add("active-overlay");
+//   modal.classList.add("modal-active");
+// }
 
-function clearBooksFromLocal() {
-  localStorage.setItem("books", []);
-  displayBooks();
-}
+// function getBooksFromLocal() {
+//   if (localStorage.getItem("books")) {
+//     const localBooks = JSON.parse(localStorage.getItem("books"));
+//     myLibrary.push(...localBooks);
+//   } else {
+//     myLibrary = [];
+//     setBooksToLocal();
+//   }
+// }
 
-function duplicateBook(book) {
-  if (!myLibrary.find(bookItem => bookItem.title === book.title)) {
-    myLibrary.push(book);
-    return false;
-  }
-  return true;
-}
+// function setBooksToLocal() {
+//   localStorage.setItem("books", JSON.stringify(myLibrary));
+// }
+
+// function clearBooksFromLocal() {
+//   localStorage.setItem("books", []);
+//   displayBooks();
+// }
+
+// function duplicateBook(book) {
+//   if (!myLibrary.find(bookItem => bookItem.title === book.title)) {
+//     myLibrary.push(book);
+//     return false;
+//   }
+//   return true;
+// }
 
 function handleSubmit(e) {
   e.preventDefault();
 
-  "read", read;
   if (title.value !== "" && author.value !== "" && pages.value > 0) {
-    const book = {
-      title: title.value,
-      author: author.value,
-      pages: pages.value,
-      id: crypto.randomUUID(),
-      read: read,
-      userId: signedInUser ? signedInUser.uid : null,
-    };
+    const book = new Book(title.value, author.value, pages.value, read);
     bookSubmission.reset();
 
-    if (duplicateBook(book)) {
-      //duplidate found display error
-      duplicateFound.style.display = "block";
-      return;
-    }
-    console.log("duplicate book aclled", duplicateBook(book));
+    // if (duplicateBook(book)) {
+    //   //duplidate found display error
+    //   duplicateFound.style.display = "block";
+    //   return;
+    // }
 
-    // myLibrary.push(book);
     if (signedInUser) {
       addDoc(colRef, { ...book }).then(res => {
         toggleModal();
         displayBooks();
       });
     } else {
+      bookLibrary.addBook(book);
+      bookLibrary.renderBooks();
       toggleModal();
-      setBooksToLocal();
-      displayBooks();
     }
   }
 }
 
-function displayBooks() {
-  ("displayu books called");
-  let str = "";
+// function displayBooks() {
+//   ("displayu books called");
+//   let str = "";
 
-  "my libray", myLibrary;
-  if (myLibrary.length === 0) {
-    ("isnide if");
-    noBooks.style.display = "block";
+//   "my libray", myLibrary;
+//   if (myLibrary.length === 0) {
+//     ("isnide if");
+//     noBooks.style.display = "block";
+//   }
+//   for (let book of myLibrary) {
+//     noBooks.style.display = "none";
+
+//     const notRead = book.read ? "Read" : "Not Read";
+//     const readStyle = notRead === "Read" ? null : "not-read";
+//     "not read", readStyle;
+
+//     str += `<div class="book-item">
+//     <p>"${book.title}"</p>
+//     <p>${book.author}</p>
+//     <p>${book.pages} pages</p>
+//     <div class="btn-containers">
+//       <button class="btn submit ${readStyle}"  id=read-btn data-btn-id=${book.id}>${notRead}</button>
+//       <button class="btn remove" id=delete-btn data-btn-id=${book.id} >Remove</button>
+//     </div>
+//   </div>`;
+//   }
+//   "books", books;
+
+//   books.innerHTML = str;
+
+//   const readBtns = document.querySelectorAll("#read-btn");
+
+//   readBtns.forEach(btn => {
+//     btn.addEventListener("click", () => handleRead(btn.dataset.btnId));
+//   });
+
+//   const deleteBtns = document.querySelectorAll("#delete-btn");
+//   deleteBtns.forEach(btn => {
+//     btn.addEventListener("click", () => deleteBook(btn.dataset.btnId));
+//   });
+// }
+
+// function handleRead(id) {
+//   const val = document.querySelector(`[data-btn-id="${id}"]`);
+//   val.innerHTML = val.textContent === "Read" ? "Not Read" : "Read";
+//   val.classList.toggle("not-read");
+
+//   const readStatus = val.innerHTML === "Read" ? true : false;
+//   if (signedInUser) {
+//     updateReadStatus(id, readStatus);
+//   } else {
+//     myLibrary.forEach(book => {
+//       if (book.id === id) {
+//         book.read = readStatus;
+//       }
+//     });
+//     setBooksToLocal();
+//   }
+// }
+
+// function deleteBook(id) {
+//   const docRef = doc(db, "books", id);
+//   myLibrary = myLibrary.filter(book => {
+//     return book.id !== id;
+//   });
+
+//   if (signedInUser) {
+//     deleteDoc(docRef).then(res => {
+//       displayBooks();
+//       return;
+//     });
+//   }
+//   if (localStorage.getItem("books")) {
+//     localStorage.setItem("books", JSON.stringify(myLibrary));
+//   }
+
+//   if (myLibrary.length === 0) {
+//     noBooks.style.display = "block";
+//     displayBooks();
+//   } else displayBooks();
+// }
+
+// function updateReadStatus(id, readStatus) {
+//   const docRef = doc(db, "books", id);
+
+//   "doc red", readStatus;
+//   updateDoc(docRef, {
+//     read: readStatus,
+//   }).then(res => {
+//     // displayBooks();
+//   });
+// }
+
+// function todaysDate() {
+//   const thisYear = new Date();
+//   year.textContent = thisYear.getFullYear();
+// }
+
+// function clearDom() {
+//   books.innerHTML = "";
+// }
+
+// todaysDate();
+
+// book should allow to add books,
+//delete books
+//update the book from read to not read
+//
+
+const addBookBtn = document.getElementById("add-btn");
+const submitBookBtn = document.getElementById("book-submission");
+
+addBookBtn.addEventListener("click", handleAdd);
+submitBookBtn.addEventListener("submit", handleSubmit);
+
+function handleAdd() {
+  console.log("handle add called");
+  overlay.classList.add("active-overlay");
+  modal.classList.add("modal-active");
+}
+
+class Book {
+  constructor(title, author, pages, read = false) {
+    this.title = title;
+    this.author = author;
+    this.pages = pages;
+    this.read = read;
+    this.id = uuiv4();
   }
-  for (let book of myLibrary) {
-    noBooks.style.display = "none";
+  toggleRead() {
+    this.read = !this.read;
+  }
+}
 
-    const notRead = book.read ? "Read" : "Not Read";
-    const readStyle = notRead === "Read" ? null : "not-read";
-    "not read", readStyle;
+class BookLibrary {
+  constructor(books) {
+    this.library = [books];
+  }
 
-    str += `<div class="book-item">
+  renderBooks() {
+    console.log("rende rbook called");
+    const bookHtml = document.getElementById("books");
+    console.log(bookHtml);
+    console.log("render books aclled");
+    let str = "";
+    for (let book of this.library) {
+      str += `<div class="book-item">
     <p>"${book.title}"</p>
     <p>${book.author}</p>
     <p>${book.pages} pages</p>
     <div class="btn-containers">
-      <button class="btn submit ${readStyle}"  id=read-btn data-btn-id=${book.id}>${notRead}</button>
-      <button class="btn remove" id=delete-btn data-btn-id=${book.id} >Remove</button>
+      <button class="btn submit"  id=read-btn data-btn-id=${book.id}>${book.read ? "Read" : "Not Read"}</button>
+      <button class="btn remove" id="delete-btn" data-btn-id=${book.id} >Remove</button>
     </div>
   </div>`;
-  }
-  "books", books;
-
-  books.innerHTML = str;
-
-  const readBtns = document.querySelectorAll("#read-btn");
-
-  readBtns.forEach(btn => {
-    btn.addEventListener("click", () => handleRead(btn.dataset.btnId));
-  });
-
-  const deleteBtns = document.querySelectorAll("#delete-btn");
-  deleteBtns.forEach(btn => {
-    btn.addEventListener("click", () => deleteBook(btn.dataset.btnId));
-  });
-}
-
-function handleRead(id) {
-  const val = document.querySelector(`[data-btn-id="${id}"]`);
-  val.innerHTML = val.textContent === "Read" ? "Not Read" : "Read";
-  val.classList.toggle("not-read");
-
-  const readStatus = val.innerHTML === "Read" ? true : false;
-  if (signedInUser) {
-    updateReadStatus(id, readStatus);
-  } else {
-    myLibrary.forEach(book => {
-      if (book.id === id) {
-        book.read = readStatus;
-      }
+    }
+    bookHtml.innerHTML = str;
+    const removeBtns = document.querySelectorAll("#delete-btn");
+    // loop through all the delete btsn and add the function
+    console.log("remove btns", removeBtns);
+    removeBtns.forEach(btn => {
+      btn.addEventListener("click", () => this.deleteBook(btn.dataset.btnId));
     });
-    setBooksToLocal();
+    // removeBtns.addEventListener("click", () => this.deleteBook(removeBtns.dataset.btnId));
   }
-}
 
-function deleteBook(id) {
-  const docRef = doc(db, "books", id);
-  myLibrary = myLibrary.filter(book => {
-    return book.id !== id;
-  });
+  addBook(book) {
+    this.library.push(book);
+  }
 
-  if (signedInUser) {
-    deleteDoc(docRef).then(res => {
-      displayBooks();
-      return;
+  deleteBook(id) {
+    console.log("delete book called");
+    this.library = this.library.filter(book => {
+      return book.id !== id;
     });
+    this.renderBooks();
   }
-  if (localStorage.getItem("books")) {
-    localStorage.setItem("books", JSON.stringify(myLibrary));
-  }
-
-  if (myLibrary.length === 0) {
-    noBooks.style.display = "block";
-    displayBooks();
-  } else displayBooks();
 }
 
-function updateReadStatus(id, readStatus) {
-  const docRef = doc(db, "books", id);
+const book = new Book("harry potter", "Jk rowling", 1000);
 
-  "doc red", readStatus;
-  updateDoc(docRef, {
-    read: readStatus,
-  }).then(res => {
-    // displayBooks();
-  });
-}
-
-function todaysDate() {
-  const thisYear = new Date();
-  year.textContent = thisYear.getFullYear();
-}
-
-function clearDom() {
-  books.innerHTML = "";
-}
-
-todaysDate();
-
+const bookLibrary = new BookLibrary(book);
+// bookLibrary.renderBooks();
 // todo
-// adding a book need to remove modal from screen see why its doing that
-//when signing in remove books from local storage and display books from firestore
+//incorprate firebase and local storage to the project

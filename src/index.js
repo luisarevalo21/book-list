@@ -1,6 +1,16 @@
 // imports and firebase
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, setDoc, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  setDoc,
+  addDoc,
+  deleteDoc,
+  doc,
+  updateDoc,
+  getDoc,
+} from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 
 const firebaseConfig = {
@@ -24,26 +34,26 @@ const db = getFirestore();
 const colRef = collection(db, "books");
 // let myLibrary = [];
 
-// function getUsersBooks() {
-//   "getting users books called", signedInUser;
-//   if (signedInUser) {
-//     getDocs(colRef)
-//       .then(snapshot => {
-//         let books = [];
-//         snapshot.docs.forEach(doc => {
-//           if (doc.data().userId === signedInUser.uid) {
-//             books.push({ ...doc.data(), id: doc.id });
-//           }
-//         });
+function getUsersBooks() {
+  "getting users books called", signedInUser;
+  if (signedInUser) {
+    getDocs(colRef)
+      .then(snapshot => {
+        let books = [];
+        snapshot.docs.forEach(doc => {
+          if (doc.data().userId === signedInUser.uid) {
+            books.push({ ...doc.data(), id: doc.id });
+          }
+        });
 
-//         myLibrary.push(...books);
-//         displayBooks();
-//       })
-//       .catch(err => ("Error when fetching", err));
-//   } else {
-//     getBooksFromLocal();
-//   }
-// }
+        myLibrary.push(...books);
+        displayBooks();
+      })
+      .catch(err => ("Error when fetching", err));
+  } else {
+    getBooksFromLocal();
+  }
+}
 
 //connect js and html
 const signBtn = document.getElementById("sign-btn");
@@ -75,7 +85,7 @@ overlay.addEventListener("click", toggleModal);
 const userSignIn = async () => {
   signInWithPopup(auth, provider)
     .then(res => {
-      signedInUser = res.user;
+      signedInUser = new User(res.user);
       // (user);
     })
     .catch(err => {
@@ -88,39 +98,66 @@ const userSignOut = async () => {
     .then(res => {
       alert("you have signed out succesfully");
     })
-    .catch(err => err);
+    .catch(err => console.log("error when signing out", err));
 };
 
 //checks if the user has signed in or signed out
-onAuthStateChanged(auth, user => {
-  signedInUser = user;
-  if (user) {
-    getUsersBooks();
-    signedInUser = user;
+onAuthStateChanged(auth, async user => {
+  // console.log("uiser", user);
+  console.log("auth changed", user);
 
+  clearDom();
+  // bookLibrary.renderBooks();
+  // signedInUser = new User(user);
+  if (user) {
+    let bookLibrary;
+
+    // getUsersBooks();
+    signedInUser = new User(user);
+
+    const books = await signedInUser.getBooks();
+
+    console.log("books", books);
+    bookLibrary = new BookLibrary(books);
+    bookLibrary.renderBooks();
+    // bookLibrary = new BookLibrary(signedInUser.getBooks());
+
+    // console.log("book library", books);
+    // bookLibrary.renderBooks();
+    // const bookLibrary = signedInUser.getBooks();
+    // bookLibrary.renderBooks();
     signOutBtn.style.display = "block";
     signBtn.style.display = "none";
     const str = user.email.split("@");
     userEmail.innerHTML = str[0];
-    accountBtn.style.display = "block";
+    // accountBtn.style.display = "block";
   } else {
-    // getBooksFromLocal();
+    signedInUser = null;
+    const books = getBooksFromLocal();
+    console.log("books form local", books);
     // displayBooks();
     signBtn.style.display = "block";
     signOutBtn.style.display = "none";
     accountBtn.style.display = "none";
+    bookLibrary = new BookLibrary(books);
+    bookLibrary.renderBooks();
   }
 });
 
-// const showUserModal = () => {
-//   overlay.classList.add("active-overlay");
-//   userModal.classList.add("modal-active");
-// };
+const showUserModal = () => {
+  if (userModal.classList.contains("modal-active")) {
+    userModal.classList.remove("modal-active");
+    overlay.classList.remove("active-overlay");
+  } else {
+    overlay.classList.add("active-overlay");
+    userModal.classList.add("modal-active");
+  }
+};
 
 signOutBtn.style.display = "none";
 signBtn.addEventListener("click", userSignIn);
 signOutBtn.addEventListener("click", userSignOut);
-// accountBtn.addEventListener("click", showUserModal);
+accountBtn.addEventListener("click", showUserModal);
 // accountBtn.addEventListener("click", showUserModal);
 
 // addBtn.addEventListener("click", ShowModal);
@@ -133,6 +170,9 @@ function toggleModal() {
     overlay.classList.remove("active-overlay");
     modal.classList.remove("modal-active");
     return;
+  } else if (userModal.classList.contains("modal-active")) {
+    userModal.classList.remove("modal-active");
+    overlay.classList.remove("active-overlay");
   } else {
     overlay.classList.add("active-overlay");
     modal.classList.add("modal-active");
@@ -147,32 +187,25 @@ function toggleModal() {
 //   modal.classList.add("modal-active");
 // }
 
-// function getBooksFromLocal() {
-//   if (localStorage.getItem("books")) {
-//     const localBooks = JSON.parse(localStorage.getItem("books"));
-//     myLibrary.push(...localBooks);
-//   } else {
-//     myLibrary = [];
-//     setBooksToLocal();
-//   }
-// }
+function getBooksFromLocal() {
+  if (localStorage.getItem("books")) {
+    return JSON.parse(localStorage.getItem("books"));
+    // myLibrary.push(...localBooks);
+  } else {
+    setBooksToLocal([]);
+    return [];
+    // setBooksToLocal();
+  }
+}
 
-// function setBooksToLocal() {
-//   localStorage.setItem("books", JSON.stringify(myLibrary));
-// }
+function setBooksToLocal(bookLibrary) {
+  localStorage.setItem("books", JSON.stringify(bookLibrary));
+}
 
-// function clearBooksFromLocal() {
-//   localStorage.setItem("books", []);
-//   displayBooks();
-// }
-
-// function duplicateBook(book) {
-//   if (!myLibrary.find(bookItem => bookItem.title === book.title)) {
-//     myLibrary.push(book);
-//     return false;
-//   }
-//   return true;
-// }
+function clearBooksFromLocal() {
+  localStorage.setItem("books", []);
+  displayBooks();
+}
 
 function handleSubmit(e) {
   e.preventDefault();
@@ -181,11 +214,11 @@ function handleSubmit(e) {
     const book = new Book(title.value, author.value, pages.value, read);
     bookSubmission.reset();
 
-    // if (duplicateBook(book)) {
-    //   //duplidate found display error
-    //   duplicateFound.style.display = "block";
-    //   return;
-    // }
+    if (duplicateBook(book)) {
+      //duplidate found display error
+      duplicateFound.style.display = "block";
+      return;
+    }
 
     if (signedInUser) {
       addDoc(colRef, { ...book }).then(res => {
@@ -293,16 +326,16 @@ function handleSubmit(e) {
 //   });
 // }
 
-// function todaysDate() {
-//   const thisYear = new Date();
-//   year.textContent = thisYear.getFullYear();
-// }
+function todaysDate() {
+  const thisYear = new Date();
+  year.textContent = thisYear.getFullYear();
+}
 
 // function clearDom() {
 //   books.innerHTML = "";
 // }
 
-// todaysDate();
+todaysDate();
 
 // book should allow to add books,
 //delete books
@@ -315,43 +348,65 @@ const submitBookBtn = document.getElementById("book-submission");
 addBookBtn.addEventListener("click", handleAdd);
 submitBookBtn.addEventListener("submit", handleSubmit);
 
+function clearDom() {
+  books.innerHTML = "";
+}
+
 function handleAdd() {
-  console.log("handle add called");
+  console.log("handle add called", this);
   overlay.classList.add("active-overlay");
   modal.classList.add("modal-active");
 }
 
 class Book {
-  constructor(title, author, pages, read = false) {
+  constructor(title, author, pages, read, id = crypto.randomUUID()) {
     this.title = title;
     this.author = author;
     this.pages = pages;
     this.read = read;
-    this.id = uuiv4();
-  }
-  toggleRead() {
-    this.read = !this.read;
+    this.id = id;
   }
 }
 
 class BookLibrary {
-  constructor(books) {
-    this.library = [books];
+  constructor(books = []) {
+    this.library = books;
   }
 
   renderBooks() {
-    console.log("rende rbook called");
+    clearDom();
+
+    const bookLibrary = this.library;
+
+    // if (getBooksFromLocal().length > 0) {
+    //   console.log("get books from local called", getBooksFromLocal());
+    //   this.library = getBooksFromLocal();
+    // }
     const bookHtml = document.getElementById("books");
-    console.log(bookHtml);
-    console.log("render books aclled");
+    // console.log("this.libray", this.library);
+
+    // console.log("render books aclled");
     let str = "";
-    for (let book of this.library) {
+    if (bookLibrary.length === 0) {
+      noBooks.style.display = "block";
+      return;
+    }
+
+    if (bookLibrary.length > 0) {
+      noBooks.style.display = "none";
+      // setBooksToLocal(this.library);
+    }
+    for (let book of bookLibrary) {
+      const readStatus = book.read ? "" : "not-read";
+
       str += `<div class="book-item">
     <p>"${book.title}"</p>
     <p>${book.author}</p>
     <p>${book.pages} pages</p>
     <div class="btn-containers">
-      <button class="btn submit"  id=read-btn data-btn-id=${book.id}>${book.read ? "Read" : "Not Read"}</button>
+      <button class="btn submit ${readStatus}"  id=read-btn data-btn-id=${book.id}>${
+        book.read ? "Read" : "Not Read"
+      }</button>
       <button class="btn remove" id="delete-btn" data-btn-id=${book.id} >Remove</button>
     </div>
   </div>`;
@@ -359,29 +414,126 @@ class BookLibrary {
     bookHtml.innerHTML = str;
     const removeBtns = document.querySelectorAll("#delete-btn");
     // loop through all the delete btsn and add the function
-    console.log("remove btns", removeBtns);
+
     removeBtns.forEach(btn => {
       btn.addEventListener("click", () => this.deleteBook(btn.dataset.btnId));
     });
-    // removeBtns.addEventListener("click", () => this.deleteBook(removeBtns.dataset.btnId));
+    const readBtns = document.querySelectorAll("#read-btn");
+    readBtns.forEach(btn => {
+      btn.addEventListener("click", () => this.toggleRead(btn.dataset.btnId));
+    });
   }
 
   addBook(book) {
-    this.library.push(book);
+    console.log("add book caled", book);
+    this.library.push({ ...book });
+    setBooksToLocal(this.library);
+    console.log("this library", this.library);
+    // this.renderBooks();
   }
 
   deleteBook(id) {
-    console.log("delete book called");
+    console.log("delete book called", id);
     this.library = this.library.filter(book => {
       return book.id !== id;
     });
+    if (this.library.length === 0) {
+      noBooks.style.display = "block";
+    }
+    console.log("signin user", signedInUser);
+    if (signedInUser) {
+      signedInUser.deleteBook(id);
+    } else {
+      setBooksToLocal(this.library);
+    }
     this.renderBooks();
+  }
+  toggleRead(id) {
+    console.log("toggle read called");
+    let bookToUpdate = null;
+    this.library = this.library.map(book => {
+      if (book.id === id) {
+        bookToUpdate = book;
+        return {
+          ...book,
+          read: !book.read,
+        };
+      }
+      return book;
+    });
+
+    if (signedInUser) {
+      const docRef = doc(db, "books", id);
+      updateDoc(docRef, {
+        read: !bookToUpdate.read,
+      }).then(res => {
+        this.renderBooks();
+      });
+    } else {
+      console.log("this library", this.library);
+      setBooksToLocal(this.library);
+      this.renderBooks();
+    }
+    // console.log("id", id);
+    // this.read = !this.read;
   }
 }
 
-const book = new Book("harry potter", "Jk rowling", 1000);
+class User {
+  constructor(user) {
+    this.user = user;
+    // this.bookLibrary = new BookLibrary();
+  }
+  async getBooks() {
+    const docs = await getDocs(colRef);
 
-const bookLibrary = new BookLibrary(book);
-// bookLibrary.renderBooks();
+    const books = [];
+    docs.forEach(doc => {
+      if (doc.data().userId === this.user.uid) {
+        books.push(convertDocToBook(doc));
+      }
+    });
+    console.log("books", books);
+    return books;
+
+    // console.log("this user", this.user);
+    // console.log("signed in user", signedInUser);
+    // console.log("gt books called");
+    // getDocs(colRef).then(snapshot => {
+    //   snapshot.docs.forEach(doc => {
+    //     // console.log("doc", doc.data());
+    //     if (doc.data().userId === this.user.uid) {
+    //       books.push(convertDocToBook(doc));
+    //     }
+    //   });
+    // });
+
+    //   if (doc.data().userId === signedInUser.uid) {
+    //     console.log("doc", doc);
+    //     convertDocToBook(doc);
+    //     this.bookLibrary.push(convertDocToBook(doc));
+    //   }
+    // });
+    // return books;
+  }
+  async deleteBook(id) {
+    console.log("id", id);
+    const docRef = doc(db, "books", id);
+    console.log("doc ref", docRef);
+    await deleteDoc(docRef);
+  }
+}
+
+const booksFromLocal = getBooksFromLocal();
+console.log("book from local", booksFromLocal);
+let bookLibrary = new BookLibrary(booksFromLocal);
+bookLibrary.renderBooks();
+// const book = new Book("harry potter", "Jk rowling", 1000);
+
+const convertDocToBook = doc => {
+  const { title, author, pages, read } = doc.data();
+  const id = doc.id;
+  return new Book(title, author, pages, read, id);
+};
+
 // todo
-//incorprate firebase and local storage to the project
